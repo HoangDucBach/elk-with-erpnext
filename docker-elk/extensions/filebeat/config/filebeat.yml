@@ -1,0 +1,88 @@
+# ======================== Filebeat Configuration =========================
+name: filebeat
+
+filebeat.config:
+  modules:
+    path: ${path.config}/modules.d/*.yml
+    reload.enabled: false
+
+# =========================== Autodiscover ==============================
+filebeat.autodiscover:
+  providers:
+    # The Docker autodiscover provider automatically retrieves logs from Docker
+    # containers as they start and stop.
+    - type: docker
+      hints.enabled: true
+      hints.default_config:
+        type: filestream
+        id: default-container-${data.container.id}
+        paths:
+          - /var/lib/docker/containers/${data.container.id}/*-json.log
+        parser:
+          - container:
+      templates:
+        - condition:
+            contains:
+              docker.container.image: elasticsearch
+          config:
+            - module: elasticsearch
+              server:
+                input:
+                  type: container
+                  paths:
+                    - /var/lib/docker/containers/${data.container.id}/*-json.log
+        - condition:
+            contains:
+              docker.container.labels.service: backend # Hoặc một label/điều kiện khác phù hợp
+          config:
+            - type: filestream
+              id: erpnext-backend-${data.container.id}
+              paths:
+                - /var/lib/docker/containers/${data.container.id}/*-json.log
+              parsers:
+                - container:
+              fields:
+                app: erpnext
+                component: backend
+              fields_under_root: true
+              # Xem xét multiline nếu log stacktrace của ERPNext bị ngắt dòng
+              # multiline.type: pattern
+              # multiline.pattern: '^\s' # Ví dụ: các dòng thụt vào là một phần của log trước đó
+              # multiline.negate: false
+              # multiline.match: after
+        - condition:
+            contains:
+              docker.container.labels.service: frontend
+          config:
+            - type: filestream
+              id: erpnext-frontend-${data.container.id}
+              paths:
+                - /var/lib/docker/containers/${data.container.id}/*-json.log
+              parsers:
+                - container:
+              fields:
+                app: erpnext
+                component: frontend
+              fields_under_root: true
+
+# ============================ Processors ===============================
+processors:
+  - add_cloud_metadata: ~
+  - add_docker_metadata: ~
+  - add_host_metadata: ~
+
+# ============================ Monitoring ===============================
+monitoring:
+  enabled: true
+  elasticsearch:
+    hosts: ["http://elasticsearch:9200"]
+    username: beats_system
+    password: ${BEATS_SYSTEM_PASSWORD}
+
+# ============================ Output ===============================
+output.logstash:
+  hosts: ["logstash:5044"]
+
+http:
+  enabled: true
+  host: 0.0.0.0
