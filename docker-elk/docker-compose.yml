@@ -71,12 +71,12 @@ services:
       args:
         ELASTIC_VERSION: ${ELASTIC_VERSION}
     volumes:
-      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro,Z
-      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro,Z
+      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+      - ./logstash/config/pipelines.yml:/usr/share/logstash/config/pipelines.yml:ro # Quan trọng
+      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro # Thư mục chứa các 
+
     ports:
       - 5044:5044
-      - 50000:50000/tcp
-      - 50000:50000/udp
       - 9600:9600
     environment:
       LS_JAVA_OPTS: -Xms256m -Xmx256m
@@ -137,6 +137,34 @@ services:
         max-size: "10m"
         max-file: "5"
 
+  metricbeat:
+    build:
+      context: ./extensions/metricbeat/ # Tạo thư mục này và đặt Dockerfile vào đó
+      args:
+        ELASTIC_VERSION: ${ELASTIC_VERSION}
+    user: root # Cần quyền root cho một số module như docker, system
+    volumes:
+      - ./extensions/metricbeat/config/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro,Z
+      - /var/run/docker.sock:/var/run/docker.sock:ro,Z
+      - /proc:/hostfs/proc:ro,Z
+      - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro,Z
+      - metricbeat-data:/usr/share/metricbeat/data:Z
+    environment:
+      METRICBEAT_INTERNAL_PASSWORD: ${METRICBEAT_INTERNAL_PASSWORD:-}
+      MONITORING_INTERNAL_PASSWORD: ${MONITORING_INTERNAL_PASSWORD:-}
+      BEATS_SYSTEM_PASSWORD: ${BEATS_SYSTEM_PASSWORD:-}
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    networks:
+      - network
+    depends_on:
+      - elasticsearch
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
 
 networks:
   network:
@@ -146,3 +174,4 @@ networks:
 volumes:
   elasticsearch:
   filebeat-data:
+  metricbeat-data:

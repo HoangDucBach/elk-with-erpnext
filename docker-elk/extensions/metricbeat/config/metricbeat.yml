@@ -51,6 +51,7 @@ metricbeat.modules:
 
 processors:
   - add_cloud_metadata: ~
+  - add_host_metadata: ~
 
 monitoring:
   enabled: true
@@ -63,9 +64,6 @@ output.elasticsearch:
   username: metricbeat_internal
   password: ${METRICBEAT_INTERNAL_PASSWORD}
 
-## HTTP endpoint for health checking
-## https://www.elastic.co/docs/reference/beats/metricbeat/http-endpoint
-#
 
 http:
   enabled: true

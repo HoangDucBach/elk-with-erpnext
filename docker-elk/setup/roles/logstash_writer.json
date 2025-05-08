@@ -21,6 +21,19 @@
     },
     {
       "names": [
+        "logs-app-*",
+        "debug-all-events-*"
+      ],
+      "privileges": [
+        "write",
+        "create",
+        "create_doc",
+        "create_index",
+        "manage"
+      ]
+    },
+    {
+      "names": [
         "logstash",
         "ecs-logstash"
       ],

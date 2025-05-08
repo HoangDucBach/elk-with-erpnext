@@ -1,0 +1,15 @@
+# ./logstash/config/pipelines.yml
+- pipeline.id: main
+  path.config: "/usr/share/logstash/pipeline/logstash.conf"
+
+- pipeline.id: apps-pipeline
+  path.config: "/usr/share/logstash/pipeline/apps_pipeline.conf"
+
+- pipeline.id: services-pipeline
+  path.config: "/usr/share/logstash/pipeline/services_pipeline.conf"
+
+- pipeline.id: systems-pipeline
+  path.config: "/usr/share/logstash/pipeline/systems_pipeline.conf"
+
+- pipeline.id: metrics-pipeline
+  path.config: "/usr/share/logstash/pipeline/metrics_pipeline.conf"

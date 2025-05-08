@@ -9,8 +9,6 @@ filebeat.config:
 # =========================== Autodiscover ==============================
 filebeat.autodiscover:
   providers:
-    # The Docker autodiscover provider automatically retrieves logs from Docker
-    # containers as they start and stop.
     - type: docker
       hints.enabled: true
       hints.default_config:
@@ -45,11 +43,11 @@ filebeat.autodiscover:
                 app: erpnext
                 component: backend
               fields_under_root: true
-              # Xem xét multiline nếu log stacktrace của ERPNext bị ngắt dòng
-              # multiline.type: pattern
-              # multiline.pattern: '^\s' # Ví dụ: các dòng thụt vào là một phần của log trước đó
-              # multiline.negate: false
-              # multiline.match: after
+
+              multiline.type: pattern
+              multiline.pattern: '^\s'
+              multiline.negate: false
+              multiline.match: after
         - condition:
             contains:
               docker.container.labels.service: frontend
@@ -64,6 +62,61 @@ filebeat.autodiscover:
                 app: erpnext
                 component: frontend
               fields_under_root: true
+        - condition:
+            contains:
+              docker.container.labels.service: db # For MariaDB service
+          config:
+            - module: mysql
+              error:
+                enabled: true
+                input:
+                  type: container
+                  paths:
+                    - /var/lib/docker/containers/${data.container.id}/*-json.log
+              slowlog:
+                enabled: true
+                input:
+                  type: container
+                  paths:
+                    - /var/lib/docker/containers/${data.container.id}/*-json.log
+              # You might need to add fields here if the module doesn't add enough context
+              # fields:
+              #   app: erpnext
+              #   component: database
+              # fields_under_root: true
+        - condition:
+            contains:
+              docker.container.labels.service: redis-cache
+          config:
+            - module: redis
+              log:
+                enabled: true
+                input:
+                  type: container
+                  paths:
+                    - /var/lib/docker/containers/${data.container.id}/*-json.log
+              # fields:
+              #   app: erpnext
+              #   component: redis-cache
+              # fields_under_root: true
+        - condition:
+            contains:
+              docker.container.labels.service: websocket
+          config:
+            - type: filestream
+              id: erpnext-websocket-${data.container.id}
+              paths:
+                - /var/lib/docker/containers/${data.container.id}/*-json.log
+              parsers:
+                - container: {}
+              fields:
+                app: erpnext
+                component: websocket
+              fields_under_root: true
+              multiline.type: pattern
+              multiline.pattern: '^\s'
+              multiline.negate: false
+              multiline.match: after
 
 # ============================ Processors ===============================
 processors:
@@ -82,6 +135,7 @@ monitoring:
 # ============================ Output ===============================
 output.logstash:
   hosts: ["logstash:5044"]
+  loadbalance: false
 
 http:
   enabled: true
