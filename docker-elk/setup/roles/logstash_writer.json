@@ -1,5 +1,6 @@
 {
   "cluster": [
+    "all",
     "manage_index_templates",
     "monitor",
     "manage_ilm"
@@ -21,7 +22,9 @@
     },
     {
       "names": [
-        "logs-app-*",
+        "logs-apps-*",
+        "logs-services-*",
+        "logs-fallback-*",
         "debug-all-events-*"
       ],
       "privileges": [
@@ -29,7 +32,8 @@
         "create",
         "create_doc",
         "create_index",
-        "manage"
+        "manage",
+        "manage_ilm"
       ]
     },
     {

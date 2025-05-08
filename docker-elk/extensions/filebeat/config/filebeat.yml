@@ -16,38 +16,32 @@ filebeat.autodiscover:
         id: default-container-${data.container.id}
         paths:
           - /var/lib/docker/containers/${data.container.id}/*-json.log
-        parser:
-          - container:
+        parsers:
+          - container: {}
+        fields:
+          log_source_type: generic_docker_log
+        fields_under_root: true
       templates:
         - condition:
             contains:
               docker.container.image: elasticsearch
           config:
             - module: elasticsearch
-              server:
-                input:
-                  type: container
-                  paths:
-                    - /var/lib/docker/containers/${data.container.id}/*-json.log
+              server: {} # Module handles input
         - condition:
             contains:
-              docker.container.labels.service: backend # Hoặc một label/điều kiện khác phù hợp
+              docker.container.labels.service: backend
           config:
             - type: filestream
               id: erpnext-backend-${data.container.id}
               paths:
                 - /var/lib/docker/containers/${data.container.id}/*-json.log
               parsers:
-                - container:
+                - container: {}
               fields:
                 app: erpnext
                 component: backend
               fields_under_root: true
-
-              multiline.type: pattern
-              multiline.pattern: '^\s'
-              multiline.negate: false
-              multiline.match: after
         - condition:
             contains:
               docker.container.labels.service: frontend
@@ -57,33 +51,24 @@ filebeat.autodiscover:
               paths:
                 - /var/lib/docker/containers/${data.container.id}/*-json.log
               parsers:
-                - container:
+                - container: {}
               fields:
                 app: erpnext
                 component: frontend
               fields_under_root: true
         - condition:
             contains:
-              docker.container.labels.service: db # For MariaDB service
+              docker.container.labels.service: db
           config:
             - module: mysql
               error:
                 enabled: true
-                input:
-                  type: container
-                  paths:
-                    - /var/lib/docker/containers/${data.container.id}/*-json.log
               slowlog:
                 enabled: true
-                input:
-                  type: container
-                  paths:
-                    - /var/lib/docker/containers/${data.container.id}/*-json.log
-              # You might need to add fields here if the module doesn't add enough context
-              # fields:
-              #   app: erpnext
-              #   component: database
-              # fields_under_root: true
+              fields:
+                app: erpnext
+                component: database
+              fields_under_root: true
         - condition:
             contains:
               docker.container.labels.service: redis-cache
@@ -91,14 +76,21 @@ filebeat.autodiscover:
             - module: redis
               log:
                 enabled: true
-                input:
-                  type: container
-                  paths:
-                    - /var/lib/docker/containers/${data.container.id}/*-json.log
-              # fields:
-              #   app: erpnext
-              #   component: redis-cache
-              # fields_under_root: true
+              fields:
+                app: erpnext
+                component: redis-cache
+              fields_under_root: true
+        - condition:
+            contains:
+              docker.container.labels.service: redis-queue
+          config:
+            - module: redis
+              log:
+                enabled: true
+              fields:
+                app: erpnext
+                component: redis-queue
+              fields_under_root: true
         - condition:
             contains:
               docker.container.labels.service: websocket
@@ -113,10 +105,35 @@ filebeat.autodiscover:
                 app: erpnext
                 component: websocket
               fields_under_root: true
-              multiline.type: pattern
-              multiline.pattern: '^\s'
-              multiline.negate: false
-              multiline.match: after
+        - condition: # Example for queue-short, assuming it's similar to backend/frontend in terms of log structure
+            contains:
+              docker.container.labels.service: queue-short
+          config:
+            - type: filestream
+              id: erpnext-queue-short-${data.container.id}
+              paths:
+                - /var/lib/docker/containers/${data.container.id}/*-json.log
+              parsers:
+                - container: {}
+              fields:
+                app: erpnext
+                component: queue-short
+              fields_under_root: true
+        - condition: # Example for scheduler, assuming it's similar to backend/frontend in terms of log structure
+            contains:
+              docker.container.labels.service: scheduler
+          config:
+            - type: filestream
+              id: erpnext-scheduler-${data.container.id}
+              paths:
+                - /var/lib/docker/containers/${data.container.id}/*-json.log
+              parsers:
+                - container: {}
+              fields:
+                app: erpnext
+                component: scheduler
+              fields_under_root: true
+              # Add multiline if needed for this component
 
 # ============================ Processors ===============================
 processors:
