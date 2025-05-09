@@ -13,5 +13,6 @@
 
 - pipeline.id: systems-pipeline
   path.config: "/usr/share/logstash/pipeline/systems.conf"
-# - pipeline.id: metrics-pipeline
-#   path.config: "/usr/share/logstash/pipeline/metrics_pipeline.conf"
+
+- pipeline.id: metrics-pipeline
+  path.config: "/usr/share/logstash/pipeline/metrics.conf"

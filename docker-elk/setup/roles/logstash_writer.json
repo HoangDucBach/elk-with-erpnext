@@ -1,6 +1,5 @@
 {
   "cluster": [
-    "all",
     "manage_index_templates",
     "monitor",
     "manage_ilm"
@@ -24,6 +23,8 @@
       "names": [
         "logs-apps-*",
         "logs-services-*",
+        "metrics-metrics-*",
+        "logs-systems-*",
         "logs-fallback-*",
         "debug-all-events-*"
       ],
