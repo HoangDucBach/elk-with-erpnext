@@ -122,6 +122,7 @@ services:
       # Data volume for Filebeat registry
       - filebeat-data:/usr/share/filebeat/data:Z
     environment:
+      BEAT_STRICT_PERMS: "false"
       FILEBEAT_INTERNAL_PASSWORD: ${FILEBEAT_INTERNAL_PASSWORD:-}
       BEATS_SYSTEM_PASSWORD: ${BEATS_SYSTEM_PASSWORD:-}
       ELASTICSEARCH_HOSTS: http://elasticsearch:9200
@@ -150,10 +151,14 @@ services:
       - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro,Z
       - metricbeat-data:/usr/share/metricbeat/data:Z
     environment:
+      BEAT_STRICT_PERMS: "false"
       METRICBEAT_INTERNAL_PASSWORD: ${METRICBEAT_INTERNAL_PASSWORD:-}
       MONITORING_INTERNAL_PASSWORD: ${MONITORING_INTERNAL_PASSWORD:-}
       BEATS_SYSTEM_PASSWORD: ${BEATS_SYSTEM_PASSWORD:-}
+      ELASTICSEARCH_USERNAME: elastic
       ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+      KIBANA_HOST: http://kibana:5601 # Optional
+      LOGSTASH_HOST: http://logstash:9600 # Optional
     networks:
       - network
     depends_on:

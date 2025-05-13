@@ -38,6 +38,26 @@ metricbeat.modules:
   period: 10s
   enabled: true
 
+- module: elasticsearch
+  xpack.enabled: true
+  period: 10s
+  hosts: ${ELASTICSEARCH_HOSTS}
+  username: ${ELASTICSEARCH_USERNAME}
+  password: ${BEATS_SYSTEM_PASSWORD}
+
+- module: logstash
+  xpack.enabled: true
+  period: 10s
+  hosts: ${LOGSTASH_HOST}  # Logstash must expose monitoring API
+
+- module: kibana
+  metricsets: [stats]
+  period: 10s
+  hosts: ${KIBANA_HOST}
+  xpack.enabled: true
+  username: ${ELASTICSEARCH_USERNAME}
+  password: ${BEATS_SYSTEM_PASSWORD}
+
 processors:
   - add_cloud_metadata: ~
   - add_host_metadata: ~
@@ -46,12 +66,14 @@ processors:
 monitoring:
   enabled: true
   elasticsearch:
-    username: beats_system
+    username: ${ELASTICSEARCH_USERNAME}
     password: ${BEATS_SYSTEM_PASSWORD}
-    hosts: [ http://elasticsearch:9200 ]
+    hosts: [ "${ELASTICSEARCH_HOSTS}" ]
 
-output.logstash:
-  hosts: ["logstash:5044"]
+output.elasticsearch:
+  username: ${ELASTICSEARCH_USERNAME}
+  password: ${BEATS_SYSTEM_PASSWORD}
+  hosts: [ "${ELASTICSEARCH_HOSTS}" ]
 
 http:
   enabled: true

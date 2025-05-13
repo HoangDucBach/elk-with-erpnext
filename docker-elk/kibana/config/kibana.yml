@@ -14,6 +14,8 @@ monitoring.ui.container.logstash.enabled: true
 elasticsearch.username: kibana_system
 elasticsearch.password: ${KIBANA_SYSTEM_PASSWORD}
 
+xpack.encryptedSavedObjects.encryptionKey: "3d5e8d1973aa6eecb4f92f7b6d12e31c"
+
 ## Encryption keys (optional but highly recommended)
 ##
 ## Generate with either
