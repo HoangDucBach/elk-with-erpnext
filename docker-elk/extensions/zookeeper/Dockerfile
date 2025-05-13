@@ -1,0 +1,3 @@
+ARG ZOOKEEPER_VERSION
+
+FROM confluentinc/cp-zookeeper:${ZOOKEEPER_VERSION:-7.3.2}

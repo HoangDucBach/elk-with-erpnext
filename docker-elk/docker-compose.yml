@@ -164,8 +164,50 @@ services:
       options:
         max-size: "10m"
         max-file: "5"
+  zookeeper:
+    build:
+      context: ./extensions/zookeeper/ # Đường dẫn đến thư mục chứa Dockerfile của Zookeeper
+      args:
+        ZOOKEEPER_VERSION: ${ZOOKEEPER_VERSION} # Truyền biến phiên bản
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - network
+    restart: unless-stopped
 
-
+  kafka:
+    build:
+      context: ./extensions/kafka/
+      args:
+        KAFKA_VERSION: ${KAFKA_VERSION}
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT_INTERNAL:PLAINTEXT,PLAINTEXT_EXTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INTERNAL://kafka:29092,PLAINTEXT_EXTERNAL://localhost:9092 # Đảm bảo port 29092 được dùng cho internal
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    networks:
+      - network
+    restart: unless-stopped
 networks:
   network:
     external: true
@@ -175,3 +217,5 @@ volumes:
   elasticsearch:
   filebeat-data:
   metricbeat-data:
+  kafka-data:
+  zookeeper-data:
