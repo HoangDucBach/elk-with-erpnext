@@ -150,10 +150,11 @@ monitoring:
     password: ${BEATS_SYSTEM_PASSWORD}
 
 # ============================ Output ===============================
-output.logstash:
-  hosts: ["logstash:5044"]
-  loadbalance: false
-
+output.kafka:
+  hosts: ["kafka:29092"]
+  topic: "filebeat-logs-default"
+  required_acks: 1
+  compression: gzip
 http:
   enabled: true
   host: 0.0.0.0
